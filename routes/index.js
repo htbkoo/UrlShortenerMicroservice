@@ -1,11 +1,18 @@
 var express = require('express');
 var router = express.Router();
 
-var requestHeaderParser = require("../service/requestHeaderParser");
+var timestampParser = require("../service/timestampParser");
 
 /* GET home page. */
 router.get('/', function (req, res) {
-    res.send(requestHeaderParser(req));
+    res.render('index', {
+        "serverHostName": req.headers.host
+    });
+});
+
+router.get('/:timestamp', function (req, res) {
+    var timestamp = req.params.timestamp;
+    res.send(timestampParser(timestamp));
 });
 
 module.exports = router;
