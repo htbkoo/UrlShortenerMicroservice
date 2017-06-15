@@ -3,10 +3,19 @@
  */
 require('dotenv').config();
 
+var validUrl = require('valid-url');
+
 module.exports = {
-    tryShortening: function(){
-        return {
-            "error": "'some invalid url' is not a valid url that follow the format 'http://www.example.com'"
+    tryShortening: function (possibleUrl) {
+        if (validUrl.isWebUri(possibleUrl)) {
+            return {
+                "shortened_from": possibleUrl,
+                "shortened_to": "short"
+            }
+        } else {
+            return {
+                "error": "'" + possibleUrl + "' is not a valid url that follow the format 'http://www.example.com'"
+            };
         }
     }
 };

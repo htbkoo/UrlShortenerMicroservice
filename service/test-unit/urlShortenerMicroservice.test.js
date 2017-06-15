@@ -28,5 +28,20 @@ describe("urlShortenerMicroservice", function () {
             test.expect('shortened_from' in jsonResponse).to.be.false;
             test.expect('shortened_to' in jsonResponse).to.be.false;
         });
+
+        it("should try to shorten valid URL return that as json response", function () {
+            //    given
+            var aValidUrl = "http://www.example.com";
+            var shortenedUrl = "short";
+
+            //    when
+            var jsonResponse = urlShortenerMicroservice.tryShortening(aValidUrl);
+
+            //    then
+            test.expect('error' in jsonResponse).to.be.false;
+            test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
+            test.expect(jsonResponse['shortened_to']).to.equal(shortenedUrl);
+        });
+
     });
 });
