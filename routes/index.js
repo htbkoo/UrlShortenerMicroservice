@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-var timestampParser = require("../service/timestampParser");
+var urlShortenerMicroservice = require("../service/urlShortenerMicroservice");
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -12,7 +12,7 @@ router.get('/', function (req, res) {
 
 router.get('/:timestamp', function (req, res) {
     var timestamp = req.params.timestamp;
-    res.send(timestampParser(timestamp));
+    res.send(urlShortenerMicroservice(timestamp));
 });
 
 module.exports = router;
