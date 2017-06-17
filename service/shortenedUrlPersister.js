@@ -11,21 +11,15 @@ var COLLECTION_NAME_SHORTEN_URL = 'shortenedUrls';
 
 module.exports = {
     "getPromiseForPersistingOrReturningExisting": function (oriUrl) {
-        var collection;
         return mongo.connect(MONGO_URL)
             .then(function (db) {
-                collection = db.collection(COLLECTION_NAME_SHORTEN_URL);
-                return collection.find({
-                    'shorten_from': oriUrl
-                }).toArray();
-            })
-            .then(function (data) {
-                return collection.insert({
-                    'shorten_from': oriUrl,
-                    'shorten_to': idGenerator.generate()
-                }).then(function (data) {
-                    return data.ops[0]["shorten_to"];
-                });
+                return db.collection(COLLECTION_NAME_SHORTEN_URL)
+                    .insert({
+                        'shorten_from': oriUrl,
+                        'shorten_to': idGenerator.generate()
+                    }).then(function (data) {
+                        return data.ops[0]["shorten_to"];
+                    });
             })
             .catch(function (err) {
                 console.log("Error caught for mongo db connections: " + err);
