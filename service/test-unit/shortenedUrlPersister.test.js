@@ -84,18 +84,6 @@ describe("shortenedUrlPersister", function () {
 
                     var existingEntry = {"shorten_from": originalUrl, "shorten_to": shortenedUrl};
                     return collection.insert(existingEntry);
-
-                    /*
-                     handlerForCleanUp.collection.find({"shorten_from": originalUrl}).toArray().then(function (data) {
-                     console.log(data);
-                     });
-                     * */
-                    // collection.find({"a":1}).toArray().then(function(data){console.log(data)})
-                    // var state = collection.toJSON();
-                    // if (typeof state.documents === "undefined") {
-                    //     state.documents = {};
-                    // }
-                    // state.documents.push({"shorten_from": originalUrl, "shorten_to": shortenedUrl});
                 }).then(function (data) {
                     //    when
                     return shortenedUrlPersister.getPromiseFor.persistOrReturnExisting(originalUrl);
