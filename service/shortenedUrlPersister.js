@@ -16,9 +16,9 @@ module.exports = {
             return mongo.connect(MONGO_URL)
                 .then(function (db) {
                     collection = db.collection(COLLECTION_NAME_SHORTEN_URL);
-                    return collection.find({
+                    return collection.findOne({
                         'shorten_from': oriUrl
-                    }).toArray();
+                    });
                 })
                 .then(function (data) {
                     if (isMappingExists(data)) {
@@ -43,10 +43,10 @@ module.exports = {
 
 function alignFindResultToInsertResultFormat(data) {
     return {
-        ops: data
+        ops: [data]
     };
 }
 
-function isMappingExists(data){
-    return data.length > 0;
+function isMappingExists(data) {
+    return (data !== null) && (typeof data === "object") && ("shorten_to" in data);
 }
