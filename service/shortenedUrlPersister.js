@@ -21,7 +21,7 @@ module.exports = {
                     }).toArray();
                 })
                 .then(function (data) {
-                    if (data.length > 0) {
+                    if (isMappingExists(data)) {
                         return alignFindResultToInsertResultFormat(data);
                     } else {
                         return collection.insert({
@@ -45,4 +45,8 @@ function alignFindResultToInsertResultFormat(data) {
     return {
         ops: data
     };
+}
+
+function isMappingExists(data){
+    return data.length > 0;
 }
