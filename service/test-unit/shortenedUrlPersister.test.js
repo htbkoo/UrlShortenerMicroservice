@@ -90,15 +90,10 @@ describe("shortenedUrlPersister", function () {
                 }).then(function (returnedUrl) {
                     //    then
                     test.expect(returnedUrl).to.be.equal(shortenedUrl);
-                    return mockMongoClient.connect(mongoUrl);
-                }).then(function (db) {
-                    handlerForCleanUp.db = db;
 
-                    var collection = db.collection('shortenedUrls');
-                    handlerForCleanUp.collection = collection;
-                    return collection.findOne({
+                    return handlerForCleanUp.collection.findOne({
                         "shorten_from": originalUrl
-                    })
+                    });
                 }).then(function (data) {
                     test.expect(data["shorten_to"]).to.equal(shortenedUrl);
                 }).then(function () {
