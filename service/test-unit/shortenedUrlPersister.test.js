@@ -36,7 +36,7 @@ describe("shortenedUrlPersister", function () {
         stub_IdGenerator.returns(shortenedUrl);
 
         //    when
-        var promise = shortenedUrlPersister.getPromiseForPersistingOrReturningExisting(originalUrl);
+        var promise = shortenedUrlPersister.getPromiseFor.persist(originalUrl);
 
         //    then
         var handlerForCleanUp = {};
