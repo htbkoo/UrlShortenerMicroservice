@@ -9,12 +9,6 @@ var idGenerator = require('./idGenerator');
 var MONGO_URL = process.env.MONGO_URL;
 var COLLECTION_NAME_SHORTEN_URL = 'shortenedUrls';
 
-function alignFindResultToBInsertResultFormat(data) {
-    return {
-        ops: data
-    };
-}
-
 module.exports = {
     "getPromiseFor": {
         "persistOrReturnExisting": function (oriUrl) {
@@ -28,15 +22,16 @@ module.exports = {
                 })
                 .then(function (data) {
                     if (data.length > 0) {
-                        return data[0]["shorten_to"];
+                        return alignFindResultToInsertResultFormat(data);
+                    } else {
+                        return collection.insert({
+                            'shorten_from': oriUrl,
+                            'shorten_to': idGenerator.generate()
+                        });
                     }
-
-                    return collection.insert({
-                        'shorten_from': oriUrl,
-                        'shorten_to': idGenerator.generate()
-                    }).then(function (data) {
-                        return data.ops[0]["shorten_to"];
-                    });
+                })
+                .then(function (data) {
+                    return data.ops[0]["shorten_to"];
                 })
                 .catch(function (err) {
                     console.log("Error caught for mongo db connections: " + err);
@@ -45,3 +40,9 @@ module.exports = {
         }
     }
 };
+
+function alignFindResultToInsertResultFormat(data) {
+    return {
+        ops: data
+    };
+}
