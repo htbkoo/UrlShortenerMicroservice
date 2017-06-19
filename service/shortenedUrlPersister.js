@@ -34,7 +34,7 @@ module.exports = {
                     return data.ops[0]["shorten_to"];
                 })
                 .catch(function (err) {
-                    console.log("Error caught for mongo db connections: " + err);
+                    console.log("Error caught for shortenedUrlPersister.persistOrReturnExisting: " + err);
                     throw err;
                 });
         },
@@ -48,6 +48,10 @@ module.exports = {
                 .then(function (data) {
                     return data.shorten_from;
                 })
+                .catch(function (err) {
+                    console.log("Error caught for shortenedUrlPersister.search: " + err);
+                    throw err;
+                });
         }
     }
 };
