@@ -152,5 +152,18 @@ describe("shortenedUrlPersister", function () {
                     });
             });
         });
+
+        it("should return json response with error message if not found", function () {
+            //    given
+            var handlerForCleanUp = {};
+
+            //    when
+            var promise = shortenedUrlPersister.getPromiseFor.search(shortenedUrl);
+
+            //    then
+            return promise.then(function (data) {
+                test.expect(data.error).to.equal(format("Url '{}' does not map to any url", shortenedUrl));
+            })
+        });
     });
 });

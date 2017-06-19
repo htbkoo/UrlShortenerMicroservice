@@ -46,7 +46,13 @@ module.exports = {
                     })
                 })
                 .then(function (data) {
-                    return data.shorten_from;
+                    if (isMappingExists(data)) {
+                        return data.shorten_from;
+                    } else {
+                        return {
+                            error: "Url '" + shortenedUrl + "' does not map to any url"
+                        }
+                    }
                 })
                 .catch(function (err) {
                     console.log("Error caught for shortenedUrlPersister.search: " + err);
