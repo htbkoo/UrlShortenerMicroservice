@@ -37,6 +37,17 @@ module.exports = {
                     console.log("Error caught for mongo db connections: " + err);
                     throw err;
                 });
+        },
+        "search": function (shortenedUrl) {
+            return mongo.connect(MONGO_URL)
+                .then(function (db) {
+                    return db.collection(COLLECTION_NAME_SHORTEN_URL).findOne({
+                        'shorten_to': shortenedUrl
+                    })
+                })
+                .then(function (data) {
+                    return data.shorten_from;
+                })
         }
     }
 };
