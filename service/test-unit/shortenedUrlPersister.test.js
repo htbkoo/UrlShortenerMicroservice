@@ -30,13 +30,19 @@ describe("shortenedUrlPersister", function () {
     });
 
     describe("persist", function () {
+        var mongoUrl = process.env.MONGO_URL;
+        var originalUrl = "originalUrl";
+        var shortenedUrl = "short";
+
+        var stub_IdGenerator_generate = sinon.stub(idGenerator, "generate");
+
+        afterEach(function(){
+           stub_IdGenerator_generate.restore()
+        });
+
         it("should be able to persist unique original url", function () {
             //    given
-            var mongoUrl = process.env.MONGO_URL;
-            var originalUrl = "originalUrl";
-            var shortenedUrl = "short";
-            var stub_IdGenerator = sinon.stub(idGenerator, "generate");
-            stub_IdGenerator.returns(shortenedUrl);
+            stub_IdGenerator_generate.returns(shortenedUrl);
 
             //    when
             var promise = shortenedUrlPersister.getPromiseFor.persistOrReturnExisting(originalUrl);
@@ -61,7 +67,6 @@ describe("shortenedUrlPersister", function () {
                 // truncate
                 handlerForCleanUp.collection.toJSON().documents.length = 0;
                 handlerForCleanUp.db.close();
-                stub_IdGenerator.restore();
             }).catch(function (err) {
                 throw err;
             });
@@ -69,11 +74,7 @@ describe("shortenedUrlPersister", function () {
 
         it("should return existing shortened url if found instead of generating new when persist", function () {
             //    given
-            var mongoUrl = process.env.MONGO_URL;
-            var originalUrl = "originalUrl";
-            var shortenedUrl = "short";
-            var stub_IdGenerator = sinon.stub(idGenerator, "generate");
-            stub_IdGenerator.throws("Unexpected call of idGenerator.generate()");
+            stub_IdGenerator_generate.throws("Unexpected call of idGenerator.generate()");
 
             var handlerForCleanUp = {};
             return mockMongoClient.connect(mongoUrl)
@@ -100,7 +101,6 @@ describe("shortenedUrlPersister", function () {
                     // truncate
                     handlerForCleanUp.collection.toJSON().documents.length = 0;
                     handlerForCleanUp.db.close();
-                    stub_IdGenerator.restore();
                 }).catch(function (err) {
                     throw err;
                 });
