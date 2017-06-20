@@ -2,10 +2,6 @@
  * Created by Hey on 16 Jun 2017
  */
 var test = require('chai');
-var sinon = require('sinon');
-var sinonTest = require('sinon-test');
-sinon.test = sinonTest.configureTest(sinon);
-sinon.testcase = sinonTest.configureTestCase(sinon);
 var rewire = require('rewire');
 
 var idGenerator = rewire('../idGenerator');
@@ -28,7 +24,7 @@ describe("idGenerator", function () {
         "anId",
         "someOtherId"
     ].forEach(function (expectedId) {
-        it("should be able to generate new uuid without parameter", sinon.test(function () {
+        it("should be able to generate new uuid without parameter", function () {
             //    given
             nextReturnedId = expectedId;
 
@@ -37,6 +33,6 @@ describe("idGenerator", function () {
 
             //    then
             test.expect(nextId).to.equal(expectedId);
-        }));
+        });
     });
 });
