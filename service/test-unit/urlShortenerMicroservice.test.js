@@ -3,8 +3,9 @@
  */
 var test = require('chai');
 var format = require('string-format');
+var rewire = require('rewire');
 
-var urlShortenerMicroservice = require('../urlShortenerMicroservice');
+var urlShortenerMicroservice = rewire('../urlShortenerMicroservice');
 
 describe("urlShortenerMicroservice", function () {
     it("should be able to get MONGO_URL from .env", function () {
@@ -16,32 +17,65 @@ describe("urlShortenerMicroservice", function () {
         test.expect(mongoUrl).to.be.not.undefined;
     });
     describe("Shortening URL", function () {
-        it("should throw error for invalid URL that does not follow the valid http://www.example.com format", function () {
-            //    given
-            var anInvalidUrl = "some invalid url";
+        describe("invalid URL", function () {
+            it("should throw error for invalid URL that does not follow the valid http://www.example.com format", function () {
+                //    given
+                var anInvalidUrl = "some invalid url";
 
-            //    when
-            var jsonResponse = urlShortenerMicroservice.tryShortening(anInvalidUrl);
+                //    when
+                var promise = urlShortenerMicroservice.tryShortening(anInvalidUrl);
 
-            //    then
-            test.expect(jsonResponse.error).to.equal(format("'{}' is not a valid url that follow the format 'http://www.example.com'", anInvalidUrl));
-            test.expect('shortened_from' in jsonResponse).to.be.false;
-            test.expect('shortened_to' in jsonResponse).to.be.false;
+                //    then
+                return promise.then(function (jsonResponse) {
+                    test.expect(jsonResponse.error).to.equal(format("'{}' is not a valid url that follow the format 'http://www.example.com'", anInvalidUrl));
+                    test.expect('shortened_from' in jsonResponse).to.be.false;
+                    test.expect('shortened_to' in jsonResponse).to.be.false;
+                });
+            });
         });
 
-        it("should try to shorten valid URL return that as json response", function () {
-            //    given
-            var aValidUrl = "http://www.example.com";
-            var shortenedUrl = "short";
+        describe("valid URL", function () {
+            var toRestore = {
+                'shortenedUrlPersister': ""
+            };
+            beforeEach(function () {
+                Object.keys(toRestore).forEach(function (key) {
+                    toRestore[key] = urlShortenerMicroservice.__get__(key);
+                });
+            });
+            afterEach(function () {
+                Object.keys(toRestore).forEach(function (key) {
+                    urlShortenerMicroservice.__set__('key', toRestore[key]);
+                });
+            });
 
-            //    when
-            var jsonResponse = urlShortenerMicroservice.tryShortening(aValidUrl);
+            [
+                "short",
+                "another"
+            ].forEach(function (shortenedUrl) {
+                it("should try to shorten valid URL return that as json response", function () {
+                    //    given
+                    var aValidUrl = "http://www.example.com";
+                    var mock_shortenedUrlPersister = {
+                        'getPromiseFor': {
+                            persistOrReturnExisting: function () {
+                                return Promise.resolve(shortenedUrl);
+                            }
+                        }
+                    };
+                    urlShortenerMicroservice.__set__('shortenedUrlPersister', mock_shortenedUrlPersister);
 
-            //    then
-            test.expect('error' in jsonResponse).to.be.false;
-            test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
-            test.expect(jsonResponse['shortened_to']).to.equal(shortenedUrl);
-        });
+                    //    when
+                    var promise = urlShortenerMicroservice.tryShortening(aValidUrl);
 
+                    //    then
+                    return promise.then(function (jsonResponse) {
+                        test.expect('error' in jsonResponse).to.be.false;
+                        test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
+                        test.expect(jsonResponse['shortened_to']).to.equal(shortenedUrl);
+                    })
+                });
+            });
+        })
     });
 });
