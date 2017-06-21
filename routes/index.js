@@ -10,9 +10,12 @@ router.get('/', function (req, res) {
     });
 });
 
-router.get('/:timestamp', function (req, res) {
-    var timestamp = req.params.timestamp;
-    res.send(urlShortenerMicroservice(timestamp));
+router.get('/shorten/*', function (req, res) {
+    var url = req.params['0'];
+    urlShortenerMicroservice.tryShortening(url).then(function (jsonResponse) {
+            res.send(jsonResponse);
+        }
+    );
 });
 
 module.exports = router;
