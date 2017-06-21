@@ -2,11 +2,12 @@ var express = require('express');
 var router = express.Router();
 
 var urlShortenerMicroservice = require("../service/urlShortenerMicroservice");
+var serverHostNameFormatter = require("../service/serverHostNameFormatter");
 
 /* GET home page. */
 router.get('/', function (req, res) {
     res.render('index', {
-        "serverHostName": req.headers.host
+        "serverHostNameWithProtocol": serverHostNameFormatter.appendProtocolToHostName(req.headers.host)
     });
 });
 
