@@ -115,3 +115,6 @@ out
 gen
 
 shelf/
+
+# MongoDb data
+data/
