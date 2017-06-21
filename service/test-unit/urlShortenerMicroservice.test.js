@@ -56,14 +56,11 @@ describe("urlShortenerMicroservice", function () {
                 it("should try to shorten valid URL return that as json response", function () {
                     //    given
                     var aValidUrl = "http://www.example.com";
-                    var mock_shortenedUrlPersister = {
-                        'getPromiseFor': {
-                            persistOrReturnExisting: function () {
-                                return Promise.resolve(shortenedUrl);
-                            }
+                    mockGetPromiseFor({
+                        persistOrReturnExisting: function () {
+                            return Promise.resolve(shortenedUrl);
                         }
-                    };
-                    urlShortenerMicroservice.__set__('shortenedUrlPersister', mock_shortenedUrlPersister);
+                    });
 
                     //    when
                     var promise = urlShortenerMicroservice.tryShortening(aValidUrl);
@@ -76,6 +73,12 @@ describe("urlShortenerMicroservice", function () {
                     })
                 });
             });
-        })
+        });
+
+        function mockGetPromiseFor(mockGetPromiseFor) {
+            urlShortenerMicroservice.__set__('shortenedUrlPersister', {
+                'getPromiseFor': mockGetPromiseFor
+            });
+        }
     });
 });
