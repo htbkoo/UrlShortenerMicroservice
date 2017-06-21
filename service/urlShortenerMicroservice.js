@@ -19,6 +19,11 @@ module.exports = {
                         "shortened_from": possibleUrl,
                         "shortened_to": shortenedUrl
                     }
+                })
+                .catch(function (error) {
+                    return {
+                        'error': 'Unable to shorten url, reason: '.concat(error.message)
+                    }
                 });
         } else {
             return Promise.resolve({

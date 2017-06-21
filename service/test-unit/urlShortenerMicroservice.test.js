@@ -73,6 +73,31 @@ describe("urlShortenerMicroservice", function () {
                     })
                 });
             });
+
+            it("should catch any error thrown from the promise and return error message as json response", function () {
+                //    given
+                var aValidUrl = "http://www.example.com";
+                var errMessage = 'some error';
+                mockGetPromiseFor({
+                    persistOrReturnExisting: function () {
+                        return new Promise(function(){
+                            throw new Error(errMessage);
+                        }).catch(function(err){
+                            throw err;
+                        });
+                    }
+                });
+
+                //    when
+                var promise = urlShortenerMicroservice.tryShortening(aValidUrl);
+
+                //    then
+                return promise.then(function (jsonResponse) {
+                    test.expect(jsonResponse.error).to.equal(format("Unable to shorten url, reason: {}", errMessage));
+                    test.expect('shortened_from' in jsonResponse).to.be.false;
+                    test.expect('shortened_to' in jsonResponse).to.be.false;
+                });
+            });
         });
 
         function mockGetPromiseFor(mockGetPromiseFor) {
