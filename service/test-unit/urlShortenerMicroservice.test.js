@@ -8,6 +8,8 @@ var rewire = require('rewire');
 var urlShortenerMicroservice = rewire('../urlShortenerMicroservice');
 
 describe("urlShortenerMicroservice", function () {
+    var aFullHostName = "http://www.somehost.com";
+
     it("should be able to get MONGO_URL from .env", function () {
         //    given
         //    when
@@ -16,6 +18,7 @@ describe("urlShortenerMicroservice", function () {
         //    then
         test.expect(mongoUrl).to.be.not.undefined;
     });
+
     describe("Shortening URL", function () {
         describe("invalid URL", function () {
             it("should throw error for invalid URL that does not follow the valid http://www.example.com format", function () {
@@ -23,7 +26,7 @@ describe("urlShortenerMicroservice", function () {
                 var anInvalidUrl = "some invalid url";
 
                 //    when
-                var promise = urlShortenerMicroservice.tryShortening(anInvalidUrl);
+                var promise = urlShortenerMicroservice.tryShortening(anInvalidUrl, aFullHostName);
 
                 //    then
                 return promise.then(function (jsonResponse) {
@@ -57,19 +60,19 @@ describe("urlShortenerMicroservice", function () {
                     //    given
                     var aValidUrl = "http://www.example.com";
                     mockGetPromiseFor({
-                        persistOrReturnExisting: function () {
-                            return Promise.resolve(shortenedUrl);
+                        persistOrReturnExisting: function (url, hostName) {
+                            return Promise.resolve(hostName.concat(shortenedUrl));
                         }
                     });
 
                     //    when
-                    var promise = urlShortenerMicroservice.tryShortening(aValidUrl);
+                    var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
 
                     //    then
                     return promise.then(function (jsonResponse) {
                         test.expect('error' in jsonResponse).to.be.false;
                         test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
-                        test.expect(jsonResponse['shortened_to']).to.equal(shortenedUrl);
+                        test.expect(jsonResponse['shortened_to']).to.equal(aFullHostName.concat(shortenedUrl));
                     })
                 });
             });
@@ -80,9 +83,9 @@ describe("urlShortenerMicroservice", function () {
                 var errMessage = 'some error';
                 mockGetPromiseFor({
                     persistOrReturnExisting: function () {
-                        return new Promise(function(){
+                        return new Promise(function () {
                             throw new Error(errMessage);
-                        }).catch(function(err){
+                        }).catch(function (err) {
                             throw err;
                         });
                     }

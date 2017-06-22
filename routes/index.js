@@ -5,15 +5,19 @@ var urlShortenerMicroservice = require("../service/urlShortenerMicroservice");
 var serverHostNameFormatter = require("../service/serverHostNameFormatter");
 
 /* GET home page. */
+function getFullHostNameFromReq(req) {
+    return serverHostNameFormatter.appendProtocolToHostName(req.headers.host);
+}
+
 router.get('/', function (req, res) {
     res.render('index', {
-        "serverHostNameWithProtocol": serverHostNameFormatter.appendProtocolToHostName(req.headers.host)
+        "serverHostNameWithProtocol": getFullHostNameFromReq(req)
     });
 });
 
 router.get('/shorten/*', function (req, res) {
     var url = req.params['0'];
-    urlShortenerMicroservice.tryShortening(url).then(function (jsonResponse) {
+    urlShortenerMicroservice.tryShortening(url, getFullHostNameFromReq(req)).then(function (jsonResponse) {
             res.send(jsonResponse);
         }
     );

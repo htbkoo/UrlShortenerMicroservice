@@ -10,10 +10,10 @@ function createErrorMessage(possibleUrl) {
 }
 
 module.exports = {
-    tryShortening: function (possibleUrl) {
+    tryShortening: function (possibleUrl, fullHostName) {
         if (validUrl.isWebUri(possibleUrl)) {
             return shortenedUrlPersister.getPromiseFor
-                .persistOrReturnExisting(possibleUrl)
+                .persistOrReturnExisting(possibleUrl, fullHostName)
                 .then(function (shortenedUrl) {
                     return {
                         "shortened_from": possibleUrl,
