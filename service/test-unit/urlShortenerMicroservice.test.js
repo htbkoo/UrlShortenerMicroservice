@@ -92,7 +92,7 @@ describe("urlShortenerMicroservice", function () {
                 });
 
                 //    when
-                var promise = urlShortenerMicroservice.tryShortening(aValidUrl);
+                var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
 
                 //    then
                 return promise.then(function (jsonResponse) {
