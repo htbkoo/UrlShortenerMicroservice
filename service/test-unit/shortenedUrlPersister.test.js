@@ -35,25 +35,28 @@ describe("shortenedUrlPersister", function () {
     describe("persist", function () {
         var mongoUrl = process.env.MONGO_URL;
         var originalUrl = "originalUrl";
-        var shortenedUrl = "short";
+        var generatedId = "short";
+        var fullHostName = "withProtocol://www.ahost.com";
+        var expectedPersistedShortenUrl = fullHostName.concat('/').concat(generatedId);
 
-        var stub_IdGenerator_generate = sinon.stub(idGenerator, "generate");
+        var stub_IdGenerator_generate;
 
         afterEach(function () {
-            stub_IdGenerator_generate.restore()
+            stub_IdGenerator_generate.restore();
         });
 
         it("should be able to persist unique original url", function () {
             //    given
-            stub_IdGenerator_generate.returns(shortenedUrl);
+            stub_IdGenerator_generate = sinon.stub(idGenerator, "generate");
+            stub_IdGenerator_generate.returns(generatedId);
 
             //    when
-            var promise = shortenedUrlPersister.getPromiseFor.persistOrReturnExisting(originalUrl);
+            var promise = shortenedUrlPersister.getPromiseFor.persistOrReturnExisting(originalUrl, fullHostName);
 
             //    then
             var handlerForCleanUp = {};
             return promise.then(function (returnedUrl) {
-                test.expect(returnedUrl).to.be.equal(shortenedUrl);
+                test.expect(returnedUrl).to.be.equal(expectedPersistedShortenUrl);
 
                 return mockMongoClient.connect(mongoUrl);
             }).then(function (db) {
@@ -65,7 +68,7 @@ describe("shortenedUrlPersister", function () {
                     "shorten_from": originalUrl
                 })
             }).then(function (data) {
-                test.expect(data["shorten_to"]).to.equal(shortenedUrl);
+                test.expect(data["shorten_to"]).to.equal(expectedPersistedShortenUrl);
             }).then(function () {
                 // truncate
                 handlerForCleanUp.collection.toJSON().documents.length = 0;
@@ -86,21 +89,21 @@ describe("shortenedUrlPersister", function () {
                     var collection = db.collection(COLLECTION_NAME_SHORTEN_URLS);
                     handlerForCleanUp.collection = collection;
 
-                    var existingEntry = {"shorten_from": originalUrl, "shorten_to": shortenedUrl};
+                    var existingEntry = {"shorten_from": originalUrl, "shorten_to": expectedPersistedShortenUrl};
                     return collection.insert(existingEntry);
                 }).then(function (data) {
                     //    when
                     return shortenedUrlPersister.getPromiseFor.persistOrReturnExisting(originalUrl);
                 }).then(function (returnedUrl) {
                     //    then
-                    test.expect(returnedUrl).to.be.equal(shortenedUrl);
+                    test.expect(returnedUrl).to.be.equal(expectedPersistedShortenUrl);
 
                     return handlerForCleanUp.collection.findOne({
                         "shorten_from": originalUrl
                     });
                 }).then(function (data) {
                     test.expect(data["shorten_from"]).to.equal(originalUrl);
-                    test.expect(data["shorten_to"]).to.equal(shortenedUrl);
+                    test.expect(data["shorten_to"]).to.equal(expectedPersistedShortenUrl);
                 }).then(function () {
                     // truncate
                     handlerForCleanUp.collection.toJSON().documents.length = 0;
@@ -127,6 +130,7 @@ describe("shortenedUrlPersister", function () {
                         handlerForCleanUp.db = db;
                         var collection = db.collection(COLLECTION_NAME_SHORTEN_URLS);
                         handlerForCleanUp.collection = collection;
+                        handlerForCleanUp.collection.toJSON().documents.length = 0;
 
                         var existingEntry = {"shorten_from": originalUrl, "shorten_to": shortenedUrl};
                         return collection.insert(existingEntry);

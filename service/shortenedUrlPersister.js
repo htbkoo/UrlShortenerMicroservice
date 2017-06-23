@@ -11,7 +11,7 @@ var COLLECTION_NAME_SHORTEN_URL = 'shortenedUrls';
 
 module.exports = {
     "getPromiseFor": {
-        "persistOrReturnExisting": function (oriUrl) {
+        "persistOrReturnExisting": function (oriUrl, fullHostName) {
             var collection;
             return mongo.connect(MONGO_URL)
                 .then(function (db) {
@@ -26,7 +26,7 @@ module.exports = {
                     } else {
                         return collection.insert({
                             'shorten_from': oriUrl,
-                            'shorten_to': idGenerator.generate()
+                            'shorten_to': fullHostName.concat('/').concat(idGenerator.generate())
                         });
                     }
                 })
