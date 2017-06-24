@@ -122,7 +122,27 @@ describe("urlShortenerMicroservice", function () {
             });
 
             describe("shortened URL not found", function () {
+                it('shoule return error with error message if the given shortened url does not exist', function () {
+                    //    given
+                    var hostname = "https://myhost.com";
+                    var urlParam = "short";
+                    var originalUrlUrl = "http://www.original.com";
+                    var errorMessage = urlParam.concat(" not found");
+                    stub = stubShortenedUrlPersister(function () {
+                        return new Promise(function () {
+                            throw new Error(errorMessage);
+                        });
+                    }, "search");
 
+                    //    when
+                    var promise = urlShortenerMicroservice.searchForOriginalUrl(urlParam, hostname);
+
+                    //    then
+                    return promise.then(function (err) {
+                            test.expect(err.error).to.equal(errorMessage);
+                            test.expect('shorten_from' in err).to.equal(false);
+                        })
+                });
             });
         });
 

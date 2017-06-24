@@ -38,6 +38,11 @@ module.exports = {
                 return {
                     'shorten_from': originalUrl
                 }
+            })
+            .catch(function(err){
+                return {
+                    'error': err.message
+                }
             });
     }
 };
