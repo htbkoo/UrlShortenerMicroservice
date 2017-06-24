@@ -3,9 +3,14 @@
  */
 var test = require('chai');
 var format = require('string-format');
-var rewire = require('rewire');
 
-var urlShortenerMicroservice = rewire('../urlShortenerMicroservice');
+var sinon = require('sinon');
+var sinonTest = require('sinon-test');
+sinon.test = sinonTest.configureTest(sinon);
+sinon.testCase = sinonTest.configureTestCase(sinon);
+
+var urlShortenerMicroservice = require('../urlShortenerMicroservice');
+var shortenedUrlPersister = require('../shortenedUrlPersister');
 
 describe("urlShortenerMicroservice", function () {
     var aFullHostName = "http://www.somehost.com";
@@ -38,18 +43,9 @@ describe("urlShortenerMicroservice", function () {
         });
 
         describe("valid URL", function () {
-            var toRestore = {
-                'shortenedUrlPersister': ""
-            };
-            beforeEach(function () {
-                Object.keys(toRestore).forEach(function (key) {
-                    toRestore[key] = urlShortenerMicroservice.__get__(key);
-                });
-            });
+            var stub;
             afterEach(function () {
-                Object.keys(toRestore).forEach(function (key) {
-                    urlShortenerMicroservice.__set__('key', toRestore[key]);
-                });
+                stub.restore();
             });
 
             [
@@ -59,11 +55,9 @@ describe("urlShortenerMicroservice", function () {
                 it("should try to shorten valid URL return that as json response", function () {
                     //    given
                     var aValidUrl = "http://www.example.com";
-                    mockGetPromiseFor({
-                        persistOrReturnExisting: function (url, hostName) {
-                            return Promise.resolve(hostName.concat(shortenedUrl));
-                        }
-                    });
+                    stub = stubShortenedUrlPersister(function (url, hostName) {
+                        return Promise.resolve(hostName.concat(shortenedUrl));
+                    }, "persistOrReturnExisting");
 
                     //    when
                     var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
@@ -81,15 +75,13 @@ describe("urlShortenerMicroservice", function () {
                 //    given
                 var aValidUrl = "http://www.example.com";
                 var errMessage = 'some error';
-                mockGetPromiseFor({
-                    persistOrReturnExisting: function () {
-                        return new Promise(function () {
-                            throw new Error(errMessage);
-                        }).catch(function (err) {
-                            throw err;
-                        });
-                    }
-                });
+                stub = stubShortenedUrlPersister(function () {
+                    return new Promise(function () {
+                        throw new Error(errMessage);
+                    }).catch(function (err) {
+                        throw err;
+                    });
+                }, "persistOrReturnExisting");
 
                 //    when
                 var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
@@ -103,10 +95,10 @@ describe("urlShortenerMicroservice", function () {
             });
         });
 
-        function mockGetPromiseFor(mockGetPromiseFor) {
-            urlShortenerMicroservice.__set__('shortenedUrlPersister', {
-                'getPromiseFor': mockGetPromiseFor
-            });
+        function stubShortenedUrlPersister(mockGetPromiseFor, method) {
+            var stub = sinon.stub(shortenedUrlPersister.getPromiseFor, method);
+            stub.callsFake(mockGetPromiseFor);
+            return stub;
         }
     });
 });
