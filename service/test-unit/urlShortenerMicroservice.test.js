@@ -24,39 +24,66 @@ describe("urlShortenerMicroservice", function () {
         test.expect(mongoUrl).to.be.not.undefined;
     });
 
-    describe("Shortening URL", function () {
-        describe("invalid URL", function () {
-            it("should throw error for invalid URL that does not follow the valid http://www.example.com format", function () {
-                //    given
-                var anInvalidUrl = "some invalid url";
-
-                //    when
-                var promise = urlShortenerMicroservice.tryShortening(anInvalidUrl, aFullHostName);
-
-                //    then
-                return promise.then(function (jsonResponse) {
-                    test.expect(jsonResponse.error).to.equal(format("'{}' is not a valid url that follow the format 'http://www.example.com'", anInvalidUrl));
-                    test.expect('shortened_from' in jsonResponse).to.be.false;
-                    test.expect('shortened_to' in jsonResponse).to.be.false;
-                });
-            });
+    describe("With stubbing", function () {
+        var stub;
+        afterEach(function () {
+            if (typeof stub !== 'undefined') {
+                stub.restore();
+            }
         });
 
-        describe("valid URL", function () {
-            var stub;
-            afterEach(function () {
-                stub.restore();
+        describe("Shortening URL", function () {
+            describe("invalid URL", function () {
+                it("should throw error for invalid URL that does not follow the valid http://www.example.com format", function () {
+                    //    given
+                    var anInvalidUrl = "some invalid url";
+
+                    //    when
+                    var promise = urlShortenerMicroservice.tryShortening(anInvalidUrl, aFullHostName);
+
+                    //    then
+                    return promise.then(function (jsonResponse) {
+                        test.expect(jsonResponse.error).to.equal(format("'{}' is not a valid url that follow the format 'http://www.example.com'", anInvalidUrl));
+                        test.expect('shortened_from' in jsonResponse).to.be.false;
+                        test.expect('shortened_to' in jsonResponse).to.be.false;
+                    });
+                });
             });
 
-            [
-                "short",
-                "another"
-            ].forEach(function (shortenedUrl) {
-                it("should try to shorten valid URL return that as json response", function () {
+            describe("valid URL", function () {
+                [
+                    "short",
+                    "another"
+                ].forEach(function (shortenedUrl) {
+                    it("should try to shorten valid URL return that as json response", function () {
+                        //    given
+                        var aValidUrl = "http://www.example.com";
+                        stub = stubShortenedUrlPersister(function (url, hostName) {
+                            return Promise.resolve(hostName.concat(shortenedUrl));
+                        }, "persistOrReturnExisting");
+
+                        //    when
+                        var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
+
+                        //    then
+                        return promise.then(function (jsonResponse) {
+                            test.expect('error' in jsonResponse).to.be.false;
+                            test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
+                            test.expect(jsonResponse['shortened_to']).to.equal(aFullHostName.concat(shortenedUrl));
+                        })
+                    });
+                });
+
+                it("should catch any error thrown from the promise and return error message as json response", function () {
                     //    given
                     var aValidUrl = "http://www.example.com";
-                    stub = stubShortenedUrlPersister(function (url, hostName) {
-                        return Promise.resolve(hostName.concat(shortenedUrl));
+                    var errMessage = 'some error';
+                    stub = stubShortenedUrlPersister(function () {
+                        return new Promise(function () {
+                            throw new Error(errMessage);
+                        }).catch(function (err) {
+                            throw err;
+                        });
                     }, "persistOrReturnExisting");
 
                     //    when
@@ -64,34 +91,38 @@ describe("urlShortenerMicroservice", function () {
 
                     //    then
                     return promise.then(function (jsonResponse) {
-                        test.expect('error' in jsonResponse).to.be.false;
-                        test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
-                        test.expect(jsonResponse['shortened_to']).to.equal(aFullHostName.concat(shortenedUrl));
-                    })
+                        test.expect(jsonResponse.error).to.equal(format("Unable to shorten url, reason: {}", errMessage));
+                        test.expect('shortened_from' in jsonResponse).to.be.false;
+                        test.expect('shortened_to' in jsonResponse).to.be.false;
+                    });
+                });
+            });
+        });
+
+        describe("Retrieving URL", function () {
+            describe("shortened URL found", function () {
+                it('shoule retrieve original url if the given shortened url exists', function () {
+                    //    given
+                    var hostname = "https://myhost.com";
+                    var urlParam = "short";
+                    var originalUrlUrl = "http://www.original.com";
+                    stub = stubShortenedUrlPersister(function () {
+                        return Promise.resolve(originalUrlUrl);
+                    }, "search");
+
+                    //    when
+                    var promise = urlShortenerMicroservice.searchForOriginalUrl(urlParam, hostname);
+
+                    //    then
+                    return promise.then(function (url) {
+                        test.expect(url['shorten_from']).to.equal(originalUrlUrl);
+                        test.expect('error' in url).to.equal(false);
+                    });
                 });
             });
 
-            it("should catch any error thrown from the promise and return error message as json response", function () {
-                //    given
-                var aValidUrl = "http://www.example.com";
-                var errMessage = 'some error';
-                stub = stubShortenedUrlPersister(function () {
-                    return new Promise(function () {
-                        throw new Error(errMessage);
-                    }).catch(function (err) {
-                        throw err;
-                    });
-                }, "persistOrReturnExisting");
+            describe("shortened URL not found", function () {
 
-                //    when
-                var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
-
-                //    then
-                return promise.then(function (jsonResponse) {
-                    test.expect(jsonResponse.error).to.equal(format("Unable to shorten url, reason: {}", errMessage));
-                    test.expect('shortened_from' in jsonResponse).to.be.false;
-                    test.expect('shortened_to' in jsonResponse).to.be.false;
-                });
             });
         });
 

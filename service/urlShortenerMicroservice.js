@@ -30,5 +30,14 @@ module.exports = {
                 "error": createErrorMessage(possibleUrl)
             });
         }
+    },
+    searchForOriginalUrl: function (urlParam, fullHostname) {
+        return shortenedUrlPersister.getPromiseFor
+            .search(fullHostname.concat("/").concat(urlParam))
+            .then(function (originalUrl) {
+                return {
+                    'shorten_from': originalUrl
+                }
+            });
     }
 };
