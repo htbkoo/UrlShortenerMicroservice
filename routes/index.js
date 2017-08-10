@@ -17,6 +17,15 @@ router.get('/', function (req, res) {
 
 router.get('/shorten/*', function (req, res) {
     var url = req.params['0'];
+    var queries = Object.keys(req.query)
+        .map(function (key) {
+            return key.concat("=").concat(req.query[key]);
+        })
+        .join("&");
+    if (queries.length > 0) {
+        url = url.concat("?").concat(queries);
+    }
+
     urlShortenerMicroservice.tryShortening(url, getFullHostNameFromReq(req)).then(function (jsonResponse) {
             res.send(jsonResponse);
         }
