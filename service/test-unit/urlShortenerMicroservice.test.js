@@ -76,13 +76,13 @@ describe("urlShortenerMicroservice", function () {
                     //    given
                     var aValidUrl = "http://www.example.com";
                     var errMessage = 'some error';
-                    stub = stubShortenedUrlPersister(function () {
+                    stub = stubPersistOrReturnExisting().to.call(function () {
                         return new Promise(function () {
                             throw new Error(errMessage);
                         }).catch(function (err) {
                             throw err;
                         });
-                    }, "persistOrReturnExisting");
+                    });
 
                     //    when
                     var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
@@ -177,6 +177,9 @@ describe("urlShortenerMicroservice", function () {
                                 return Promise.resolve(hostName.concat(shortenedUrl));
                             }, "persistOrReturnExisting");
                         }
+                    },
+                    "call": function(action){
+                        return stubShortenedUrlPersister(action, "persistOrReturnExisting");
                     }
                 }
             };
