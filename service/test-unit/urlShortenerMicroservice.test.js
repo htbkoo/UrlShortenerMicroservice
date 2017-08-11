@@ -58,9 +58,7 @@ describe("urlShortenerMicroservice", function () {
                     it("should try to shorten valid URL and return that as json response", function () {
                         //    given
                         var aValidUrl = "http://www.example.com";
-                        stub = stubShortenedUrlPersister(function (url, hostName) {
-                            return Promise.resolve(hostName.concat(shortenedUrl));
-                        }, "persistOrReturnExisting");
+                        stub = stubPersistOrReturnExisting().to.resolve.withHostNameAppendedTo(shortenedUrl);
 
                         //    when
                         var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
@@ -103,9 +101,7 @@ describe("urlShortenerMicroservice", function () {
             it("should shorten any string for the shortenAny API and return that as JSON response", function () {
                 //    given
                 var someRandomString = "someRandomString", shortenedUrl = "short";
-                stub = stubShortenedUrlPersister(function (url, hostname) {
-                    return Promise.resolve(hostname.concat(shortenedUrl))
-                }, "persistOrReturnExisting");
+                stub = stubPersistOrReturnExisting().to.resolve.withHostNameAppendedTo(shortenedUrl);
 
                 //    when
                 var promise = urlShortenerMicroservice.shortenAny(someRandomString, aFullHostName);
@@ -170,6 +166,20 @@ describe("urlShortenerMicroservice", function () {
             var stub = sinon.stub(shortenedUrlPersister.getPromiseFor, method);
             stub.callsFake(mockGetPromiseFor);
             return stub;
+        }
+
+        function stubPersistOrReturnExisting() {
+            return {
+                "to": {
+                    "resolve": {
+                        "withHostNameAppendedTo": function (shortenedUrl) {
+                            return stubShortenedUrlPersister(function (url, hostName) {
+                                return Promise.resolve(hostName.concat(shortenedUrl));
+                            }, "persistOrReturnExisting");
+                        }
+                    }
+                }
+            };
         }
     });
 });
