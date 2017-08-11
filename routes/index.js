@@ -16,17 +16,18 @@ router.get('/', function (req, res) {
 });
 
 router.get('/shorten/*', function (req, res) {
-    var url = req.params['0'];
-    var queries = Object.keys(req.query)
-        .map(function (key) {
-            return key.concat("=").concat(req.query[key]);
-        })
-        .join("&");
-    if (queries.length > 0) {
-        url = url.concat("?").concat(queries);
-    }
+    var url = extractUrl(req);
 
     urlShortenerMicroservice.tryShortening(url, getFullHostNameFromReq(req)).then(function (jsonResponse) {
+            res.send(jsonResponse);
+        }
+    );
+});
+
+router.get('/shortenForAny/*', function (req, res) {
+    var url = extractUrl(req);
+
+    urlShortenerMicroservice.shortenAny(url, getFullHostNameFromReq(req)).then(function (jsonResponse) {
             res.send(jsonResponse);
         }
     );
@@ -43,5 +44,18 @@ router.get(/\/(.+)/, function (req, res) {
         }
     );
 });
+
+function extractUrl(req) {
+    var url = req.params['0'];
+    var queries = Object.keys(req.query)
+        .map(function (key) {
+            return key.concat("=").concat(req.query[key]);
+        })
+        .join("&");
+    if (queries.length > 0) {
+        url = url.concat("?").concat(queries);
+    }
+    return url;
+}
 
 module.exports = router;

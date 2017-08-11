@@ -35,6 +35,9 @@ module.exports = {
             });
         }
     },
+    shortenAny: function (string, fullHostName) {
+        return promiseForShortening(string, fullHostName);
+    },
     searchForOriginalUrl: function (urlParam, fullHostname) {
         return shortenedUrlPersister.getPromiseFor
             .search(fullHostname.concat("/").concat(urlParam))
@@ -43,7 +46,7 @@ module.exports = {
                     'shorten_from': originalUrl
                 }
             })
-            .catch(function(err){
+            .catch(function (err) {
                 return {
                     'error': err.message
                 }

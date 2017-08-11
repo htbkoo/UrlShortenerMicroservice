@@ -55,7 +55,7 @@ describe("urlShortenerMicroservice", function () {
                     "short",
                     "another"
                 ].forEach(function (shortenedUrl) {
-                    it("should try to shorten valid URL return that as json response", function () {
+                    it("should try to shorten valid URL and return that as json response", function () {
                         //    given
                         var aValidUrl = "http://www.example.com";
                         stub = stubShortenedUrlPersister(function (url, hostName) {
@@ -99,6 +99,26 @@ describe("urlShortenerMicroservice", function () {
             });
         });
 
+        describe("Shortening any string", function () {
+            it("should shorten any string for the shortenAny API and return that as JSON response", function () {
+                //    given
+                var someRandomString = "someRandomString", shortenedUrl = "short";
+                stub = stubShortenedUrlPersister(function (url, hostname) {
+                    return Promise.resolve(hostname.concat(shortenedUrl))
+                }, "persistOrReturnExisting");
+
+                //    when
+                var promise = urlShortenerMicroservice.shortenAny(someRandomString, aFullHostName);
+
+                //    then
+                return promise.then(function (jsonResponse) {
+                    test.expect('error' in jsonResponse).to.be.false;
+                    test.expect(jsonResponse['shortened_from']).to.equal(someRandomString);
+                    test.expect(jsonResponse['shortened_to']).to.equal(aFullHostName.concat(shortenedUrl));
+                })
+            });
+        });
+
         describe("Retrieving URL", function () {
             describe("shortened URL found", function () {
                 it('shoule retrieve original url if the given shortened url exists', function () {
@@ -139,9 +159,9 @@ describe("urlShortenerMicroservice", function () {
 
                     //    then
                     return promise.then(function (err) {
-                            test.expect(err.error).to.equal(errorMessage);
-                            test.expect('shorten_from' in err).to.equal(false);
-                        })
+                        test.expect(err.error).to.equal(errorMessage);
+                        test.expect('shorten_from' in err).to.equal(false);
+                    })
                 });
             });
         });
