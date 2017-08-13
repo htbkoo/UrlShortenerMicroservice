@@ -37,7 +37,7 @@ router.get(/\/(.+)/, function (req, res) {
     var urlParam = req.params['0'];
     urlShortenerMicroservice.searchForOriginalUrl(urlParam, getFullHostNameFromReq(req)).then(function (jsonResponse) {
             if ('shorten_from' in jsonResponse) {
-                res.redirect(jsonResponse['shorten_from']);
+                res.redirect(encodeURI(jsonResponse['shorten_from']));
             } else {
                 res.send(jsonResponse);
             }
