@@ -32,6 +32,45 @@ describe("urlShortenerMicroservice", function () {
             }
         });
 
+        function assertPromise(promise) {
+            function assertFieldAbsence(jsonResponse, field) {
+                test.expect(field in jsonResponse).to.be.false;
+                return jsonResponse;
+            }
+
+            function assertFieldValue(jsonResponse, field, value) {
+                test.expect(jsonResponse[field]).to.equal(value);
+                return jsonResponse;
+            }
+
+            return {
+                "withoutError": function () {
+                    return {
+                        "andResponseIs": function (from, to) {
+                            return promise.then(function (jsonResponse) {
+                                assertFieldAbsence(jsonResponse, "error");
+                                assertFieldValue(jsonResponse, "shortened_from", from);
+                                assertFieldValue(jsonResponse, "shortened_to", to);
+                                return jsonResponse
+                            });
+                        }
+                    }
+                },
+                "withError": function () {
+                    return {
+                        "andErrorMessageIs": function (errorMeassage) {
+                            return promise.then(function (jsonResponse) {
+                                assertFieldValue(jsonResponse, "error", errorMeassage);
+                                assertFieldAbsence(jsonResponse, 'shortened_from');
+                                assertFieldAbsence(jsonResponse, 'shortened_to');
+                                return jsonResponse
+                            });
+                        }
+                    }
+                }
+            };
+        }
+
         describe("Shortening URL", function () {
             describe("invalid URL", function () {
                 it("should throw error for invalid URL that does not follow the valid http://www.example.com format", function () {
@@ -42,11 +81,9 @@ describe("urlShortenerMicroservice", function () {
                     var promise = urlShortenerMicroservice.tryShortening(anInvalidUrl, aFullHostName);
 
                     //    then
-                    return promise.then(function (jsonResponse) {
-                        test.expect(jsonResponse.error).to.equal(format("'{}' is not a valid url that follow the format 'http://www.example.com'", anInvalidUrl));
-                        test.expect('shortened_from' in jsonResponse).to.be.false;
-                        test.expect('shortened_to' in jsonResponse).to.be.false;
-                    });
+                    return assertPromise(promise)
+                        .withError()
+                        .andErrorMessageIs(format("'{}' is not a valid url that follow the format 'http://www.example.com'", anInvalidUrl));
                 });
             });
 
@@ -64,11 +101,9 @@ describe("urlShortenerMicroservice", function () {
                         var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
 
                         //    then
-                        return promise.then(function (jsonResponse) {
-                            test.expect('error' in jsonResponse).to.be.false;
-                            test.expect(jsonResponse['shortened_from']).to.equal(aValidUrl);
-                            test.expect(jsonResponse['shortened_to']).to.equal(aFullHostName.concat(shortenedUrl));
-                        })
+                        return assertPromise(promise)
+                            .withoutError()
+                            .andResponseIs(aValidUrl, aFullHostName.concat(shortenedUrl));
                     });
                 });
 
@@ -88,11 +123,9 @@ describe("urlShortenerMicroservice", function () {
                     var promise = urlShortenerMicroservice.tryShortening(aValidUrl, aFullHostName);
 
                     //    then
-                    return promise.then(function (jsonResponse) {
-                        test.expect(jsonResponse.error).to.equal(format("Unable to shorten url, reason: {}", errMessage));
-                        test.expect('shortened_from' in jsonResponse).to.be.false;
-                        test.expect('shortened_to' in jsonResponse).to.be.false;
-                    });
+                    return assertPromise(promise)
+                        .withError()
+                        .andErrorMessageIs(format("Unable to shorten url, reason: {}", errMessage));
                 });
             });
         });
@@ -107,11 +140,9 @@ describe("urlShortenerMicroservice", function () {
                 var promise = urlShortenerMicroservice.shortenAny(someRandomString, aFullHostName);
 
                 //    then
-                return promise.then(function (jsonResponse) {
-                    test.expect('error' in jsonResponse).to.be.false;
-                    test.expect(jsonResponse['shortened_from']).to.equal(someRandomString);
-                    test.expect(jsonResponse['shortened_to']).to.equal(aFullHostName.concat(shortenedUrl));
-                })
+                return assertPromise(promise)
+                    .withoutError()
+                    .andResponseIs(someRandomString, aFullHostName.concat(shortenedUrl));
             });
         });
 
@@ -178,7 +209,7 @@ describe("urlShortenerMicroservice", function () {
                             }, "persistOrReturnExisting");
                         }
                     },
-                    "call": function(action){
+                    "call": function (action) {
                         return stubShortenedUrlPersister(action, "persistOrReturnExisting");
                     }
                 }
